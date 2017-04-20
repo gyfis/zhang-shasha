@@ -5,7 +5,6 @@
 #For licensing see the LICENSE file in the top level directory.
 
 from __future__ import absolute_import
-from six.moves import range
 
 import collections
 
@@ -37,11 +36,11 @@ class AnnotatedTree(object):
         self.get_children = get_children
 
         self.root = root
-        self.nodes = list()  # a post-order enumeration of the nodes in the tree
+        self.nodes = list()  # a pre-order enumeration of the nodes in the tree
         self.ids = list()    # a matching list of ids
         self.lmds = list()   # left most descendents
         self.keyroots = None
-            # k and k' are nodes specified in the post-order enumeration.
+            # k and k' are nodes specified in the pre-order enumeration.
             # keyroots = {k | there exists no k'>k such that lmd(k) == lmd(k')}
             # see paper for more on keyroots
 
@@ -70,10 +69,13 @@ class AnnotatedTree(object):
             if not self.get_children(n):
                 lmd = i
                 for a in anc:
-                    if a not in lmds: lmds[a] = i
-                    else: break
+                    if a not in lmds:
+                        lmds[a] = i
+                    else:
+                        break
             else:
-                try: lmd = lmds[nid]
+                try:
+                    lmd = lmds[nid]
                 except:
                     import pdb
                     pdb.set_trace()
@@ -167,17 +169,17 @@ def distance(A, B, get_children, insert_cost, remove_cost, update_cost):
 
         m = i - Al[i] + 2
         n = j - Bl[j] + 2
-        fd = zeros((m,n), int)
+        fd = zeros((m, n), int)
 
         ioff = Al[i] - 1
         joff = Bl[j] - 1
 
-        for x in range(1, m): # δ(l(i1)..i, θ) = δ(l(1i)..1-1, θ) + γ(v → λ)
+        for x in range(1, m):  # δ(l(i1)..i, θ) = δ(l(1i)..1-1, θ) + γ(v → λ)
             fd[x][0] = fd[x-1][0] + remove_cost(An[x+ioff])
-        for y in range(1, n): # δ(θ, l(j1)..j) = δ(θ, l(j1)..j-1) + γ(λ → w)
+        for y in range(1, n):  # δ(θ, l(j1)..j) = δ(θ, l(j1)..j-1) + γ(λ → w)
             fd[0][y] = fd[0][y-1] + insert_cost(Bn[y+joff])
 
-        for x in range(1, m): ## the plus one is for the xrange impl
+        for x in range(1, m):  # the plus one is for the range impl
             for y in range(1, n):
                 # only need to check if x is an ancestor of i
                 # and y is an ancestor of j
@@ -202,7 +204,7 @@ def distance(A, B, get_children, insert_cost, remove_cost, update_cost):
                     #                   +-
                     p = Al[x+ioff]-1-ioff
                     q = Bl[y+joff]-1-joff
-                    #print (p, q), (len(fd), len(fd[0]))
+                    # print (p, q), (len(fd), len(fd[0]))
                     fd[x][y] = min(
                         fd[x-1][y] + remove_cost(An[x+ioff]),
                         fd[x][y-1] + insert_cost(Bn[y+joff]),
@@ -211,6 +213,6 @@ def distance(A, B, get_children, insert_cost, remove_cost, update_cost):
 
     for i in A.keyroots:
         for j in B.keyroots:
-            treedist(i,j)
+            treedist(i, j)
 
-    return treedists[-1][-1]
+    return treedists
